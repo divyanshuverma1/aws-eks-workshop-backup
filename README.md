@@ -117,38 +117,94 @@ To create your cluster with the console
 
 The Status field shows CREATING until the cluster provisioning process completes. Cluster provisioning usually takes between 10 and 15 minutes.
 
+## 4.Create a KubeConfig file
 
-## STEP2: DEPLOYING WORKER NODES INTO CLUSTER
-#### 1. Worker Nodes CloudFormation Template
-  ```
-  https://amazon-eks.s3-us-west-2.amazonaws.com/cloudformation/2018-11-07/amazon-eks-nodegroup.yaml
-  ```
-  Specify:
-  ```
-    StackName: e.g. EKS-WorkerNodes
-    ClusterName: e.g. EKSCluster
-    ClusterControlPlaneSG: <find EKS-VPC-ControlPlaneSecurityGroup>
-    NodeGroupName: e.g. NodeGroup
-    Observe AutoScalingGroup etc and change if required
-    AMI ID, get latest from below
-      Latest AMI List:
-      https://docs.aws.amazon.com/eks/latest/userguide/eks-optimized-ami.html
-    VPCID: <Select VPC created using CloudFormation Template in STEP1.2>
-    Subnets: <Select all 3 "EKS-VPC" available subnets created using CloudFormation Template in STEP1.2>
-    KeyName: EC2KeyPair to SSH to the node
-  ```
-  Proceed with Stack creation, once completed, go to "Output" and get "NodeInstanceRole" ARN for next step
-#### 2. Worker Nodes to join EKS Cluster
-  In order for the worker nodes to join EKS Cluster, we need to use "AWS Authenticator Configuration Map"
-  Download
-   ```bash
-    curl -O https:/amazon-eks.s3-us-west-2.amazonaws.com/cloudformation/2018-11-07/aws-auth-cm.yaml
-   ```
-  Edit the downloaded yaml file, add in NodeInstanceRole from previous Step 2.1
-  ```bash
-   kubectl apply -f aws-auth-cm.yaml
-   kubectl get nodes --watch
-  ```
+Use the AWS CLI update-kubeconfig command to create or update your kubeconfig for your cluster.
 
-## STEP3: DEPLOY YOUR MICROSERVICES E-COMMERCE & WATCH IT IN ACTION!
+```
+aws eks --region region update-kubeconfig --name cluster_name
+```
+
+Test your configuration.
+
+```
+kubectl get svc
+```
+
+## 5.  Launch and Configure Amazon EKS Worker Nodes 
+
+Wait for your cluster status to show as ACTIVE. If you launch your worker nodes before the cluster is active, the worker nodes will fail to register with the cluster and you will have to relaunch them.
+
+Open the AWS CloudFormation console at https://console.aws.amazon.com/cloudformation.
+
+From the navigation bar, select a Region that supports Amazon EKS.
+
+Choose Create stack.
+
+For Choose a template, select Specify an Amazon S3 template URL.
+
+Paste the following URL into the text area and choose Next:
+
+https://amazon-eks.s3-us-west-2.amazonaws.com/cloudformation/2019-02-11/amazon-eks-nodegroup.yaml
+
+On the Specify Details page, fill out the following parameters accordingly, and choose Next.
+
+   - Stack name: Choose a stack name for your AWS CloudFormation stack. For example, you can call it <cluster-name>-worker-nodes.
+
+   - ClusterName: Enter the name that you used when you created your Amazon EKS cluster.
+
+   **Important**
+This name must exactly match the name you used in Step 1: Create Your Amazon EKS Cluster; otherwise, your worker nodes cannot join the cluster.
+
+   - ClusterControlPlaneSecurityGroup: Choose the SecurityGroups value from the AWS CloudFormation output that you generated with Create your Amazon EKS Cluster VPC.
+
+   - NodeGroupName: Enter a name for your node group. This name can be used later to identify the Auto Scaling node group that is created for your worker nodes.
+
+   - NodeAutoScalingGroupMinSize: Enter the minimum number of nodes that your worker node Auto Scaling group can scale in to.
+
+   - NodeAutoScalingGroupDesiredCapacity: Enter the desired number of nodes to scale to when your stack is created.
+
+   - NodeAutoScalingGroupMaxSize: Enter the maximum number of nodes that your worker node Auto Scaling group can scale out to.
+
+   - NodeInstanceType: Choose an instance type for your worker nodes.
+
+   - NodeImageId: Enter the current Amazon EKS worker node AMI ID for your Region (ami-07b922b9b94d9a6d2). The AMI IDs for the latest Amazon EKS-optimized AMI (with and without GPU support) are shown in the following table. 
+   
+## 6. Launch and Configure Amazon EKS Worker Nodes 
+
+Download, edit, and apply the AWS authenticator configuration map:
+
+Download the configuration map with the following command:
+
+    curl -o aws-auth-cm.yaml https://amazon-eks.s3-us-west-2.amazonaws.com/cloudformation/2019-02-11/aws-auth-cm.yaml
+
+Open the file with your favorite text editor. Replace the <ARN of instance role (not instance profile)> snippet with the NodeInstanceRole value that you recorded in the previous procedure, and save the file.
+
+    Important
+
+    Do not modify any other lines in this file.
+
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: aws-auth
+      namespace: kube-system
+    data:
+      mapRoles: |
+        - rolearn: <ARN of instance role (not instance profile)>
+          username: system:node:{{EC2PrivateDNSName}}
+          groups:
+            - system:bootstrappers
+            - system:nodes
+
+Apply the configuration. This command might take a few minutes to finish.
+
+    kubectl apply -f aws-auth-cm.yaml
+
+Watch the status of your nodes and wait for them to reach the Ready status.
+
+    kubectl get nodes --watch
+
+
+## 7. Deploy your application
 
