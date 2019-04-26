@@ -1,7 +1,5 @@
-# aws-eks-workshop
-
 # EKS Deployment on AWS
-The purpose of this simple workshop is to provide guide as a starting of your Kubernates Journey on top of AWS.
+The purpose of this simple workshop is to provide guide as a starting of your Kubernetes Journey on top of AWS.
 After setting up your EKS Cluster, we will deploy a microservices application.
 
 ## 1. Create Cluster VPC using CloudFormation Template
