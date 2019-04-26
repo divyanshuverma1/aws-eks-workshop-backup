@@ -4,23 +4,48 @@
 The purpose of this simple workshop is to provide guide as a starting of your Kubernates Journey on top of AWS.
 After setting up your EKS Cluster, we will deploy a microservices application.
 
-# 1. Create Cluster VPC using CloudFormation Template
+## 1. Create Cluster VPC using CloudFormation Template
 
 To create your cluster VPC:
 
-    - Open the AWS CloudFormation console at https://console.aws.amazon.com/cloudformation.
+   - Open the AWS CloudFormation console at https://console.aws.amazon.com/cloudformation.
 
-    - From the navigation bar, select a Region that supports Amazon EKS.
+   - From the navigation bar, select a Region that supports Amazon EKS.
 
-    - Choose Create stack.
+   - Choose Create stack.
 
-    - For Choose a template, select Specify an Amazon S3 template URL.
+   - For Choose a template, select Specify an Amazon S3 template URL.
 
-    - Paste the following URL into the text area and choose Next: 
+   - Paste the following URL into the text area and choose Next: 
     
   ```
   https://amazon-eks.s3-us-west-2.amazonaws.com/cloudformation/2019-02-11/amazon-eks-vpc-sample.yaml
   ```
+  
+   - On the Specify Details page, fill out the parameters accordingly, and then choose Next.
+
+        Stack name: Choose a stack name for your AWS CloudFormation stack. For example, you can call it eks-vpc.
+
+        VpcBlock: Choose a CIDR range for your VPC. You can keep the default value.
+
+        Subnet01Block: Choose a CIDR range for subnet 1. You can keep the default value.
+
+        Subnet02Block: Choose a CIDR range for subnet 2. You can keep the default value.
+
+        Subnet03Block: Choose a CIDR range for subnet 3. You can keep the default value.
+
+   - (Optional) On the Options page, tag your stack resources. Choose Next.
+
+   - On the Review page, choose Create.
+
+   - When your stack is created, select it in the console and choose Outputs.
+
+   - Record the SecurityGroups value for the security group that was created. You need this when you create your EKS cluster; this security group is applied to the cross-account elastic network interfaces that are created in your subnets that allow the Amazon EKS control plane to communicate with your worker nodes.
+
+   - Record the VpcId for the VPC that was created. You need this when you launch your worker node group template.
+
+   - Record the SubnetIds for the subnets that were created. You need this when you create your EKS cluster; these are the subnets that your worker nodes are launched into.
+
 #### 3. Go to EKS Console and Create EKS Cluster
 
 Next step onwards is to prepare a client machine to install kubectl and manage your EKS Cluster/WorkerNodes, 
