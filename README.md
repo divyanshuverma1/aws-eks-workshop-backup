@@ -46,23 +46,24 @@ To create your cluster VPC:
 
    - Record the SubnetIds for the subnets that were created. You need this when you create your EKS cluster; these are the subnets that your worker nodes are launched into.
 
-#### 3. Go to EKS Console and Create EKS Cluster
+## 2. Turn on Cloud9 and install kubectl and aws-iam-authenticator
 
-Next step onwards is to prepare a client machine to install kubectl and manage your EKS Cluster/WorkerNodes, 
-you can use your laptop, or using EC2 or simplest one is Cloud9
+Next step is to prepare a client machine to install kubectl and manage your EKS Cluster/WorkerNodes. We will use Cloud9 for this purpose. Spin up a Cloud9 instance by going to https://ap-southeast-1.console.aws.amazon.com/cloud9/home/product.
 
-IMPORTANT! If you Cloud9 by default STEP2 will failed because Cloud9 rotate credentials (secret/access key) 
-and this is not supported by kubectl, because it detect/match the exact access key that represent 
-IAM User that is used to initially create the cluster.
-If you use Cloud9, then ensure you go to 
-> Preferences -> AWS Settings -> Turn off "AWS managed temporary credentials" 
+**IMPORTANT!** 
+Cloud9 rotate credentials (secret/access key) and this is not supported by kubectl, because it detect/match the exact access key that represent IAM User that is used to initially create the cluster.
+If you use Cloud9, then ensure you go to > Preferences -> AWS Settings -> Turn off "AWS managed temporary credentials" 
 and back to your Cloud9 terminal and run 
+
 ```bash
   aws configure
 ```
 to configure your credentials and region where you run EKS Cluster.
 
-#### 4. install kubectl
+Kubernetes uses a command-line utility called kubectl for communicating with the cluster API server. Amazon EKS clusters also require the AWS IAM Authenticator for Kubernetes to allow IAM authentication for your Kubernetes cluster. Beginning with Kubernetes version 1.10, you can configure the kubectl client to work with Amazon EKS by installing the AWS IAM Authenticator for Kubernetes and modifying your kubectl configuration file to use it for authentication. 
+
+**install kubectl**
+
    ```bash
    mkdir $HOME/bin
    curl -o kubectl https://amazon-eks.s3-us-west-2.amazonaws.com/1.10.3/2018-07-26/bin/linux/amd64/kubectl
@@ -72,7 +73,9 @@ to configure your credentials and region where you run EKS Cluster.
    echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc
    kubectl version --client
    ```
-#### 5. Install IAM Authenticator -> this is to allow us to manage EKS Cluster using our IAM identity
+   
+**Install IAM Authenticator**
+
    ```bash
    curl -o aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.10.3/2018-07-26/bin/linux/amd64/aws-iam-authenticator
    chmod +x ./aws-iam-authenticator
@@ -81,14 +84,41 @@ to configure your credentials and region where you run EKS Cluster.
    echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc
    aws-iam-authenticator help
    ```
-#### 6. Configure kubectl for EKS
-   ```bash
-   aws eks update-kubeconfig --name <EKS CLuster Name>
-   ```
-  Test your kubectl command
-   ```bash
-   kubectl cluster-info
-   ```
+
+## 3. Create your Amazon EKS Cluster
+
+Now you can create your Amazon EKS cluster.
+
+**Important**
+When an Amazon EKS cluster is created, the IAM entity (user or role) that creates the cluster is added to the Kubernetes RBAC authorization table as the administrator (with system:master permissions. Initially, only that IAM user can make calls to the Kubernetes API server using kubectl.
+
+To create your cluster with the console
+
+   - Open the Amazon EKS console at https://console.aws.amazon.com/eks/home#/clusters.
+
+   - Choose Create cluster.
+
+   **Note**
+   If your IAM user does not have administrative privileges, you must explicitly add permissions for that user to call the  Amazon EKS API operations. For more information, see Creating Amazon EKS IAM Policies.
+
+   - On the Create cluster page, fill in the following fields and then choose Create:
+
+         Cluster name: A unique name for your cluster.
+
+         Kubernetes version: The version of Kubernetes to use for your cluster. By default, the latest available version is selected.
+
+         Role ARN: Select the IAM role that you created with Create your Amazon EKS Service Role.
+
+         VPC: The VPC you created with Create your Amazon EKS Cluster VPC. You can find the name of your VPC in the drop-down list.
+
+         Subnets: The SubnetIds values (comma-separated) from the AWS CloudFormation output that you generated with Create your Amazon EKS Cluster VPC. By default, the available subnets in the above VPC are preselected.
+
+         Security Groups: The SecurityGroups value from the AWS CloudFormation output that you generated with Create your Amazon EKS Cluster VPC. This security group has ControlPlaneSecurityGroup in the drop-down name.
+
+   - On the Clusters page, choose the name of your newly created cluster to view the cluster information.
+
+The Status field shows CREATING until the cluster provisioning process completes. Cluster provisioning usually takes between 10 and 15 minutes.
+
 
 ## STEP2: DEPLOYING WORKER NODES INTO CLUSTER
 #### 1. Worker Nodes CloudFormation Template
@@ -123,95 +153,4 @@ to configure your credentials and region where you run EKS Cluster.
   ```
 
 ## STEP3: DEPLOY YOUR MICROSERVICES E-COMMERCE & WATCH IT IN ACTION!
-#### 1. Install Git
-  ```
-  sudo yum install git
-  ```
-#### 2. Switch to home directory and clone Microservice repo
-  ```
-  git clone https://github.com/antoniuslee/microservices-demo
-  ```
-#### 3. Install Microservice Application to the Cluster
-  Create namespace for the application
-  ```
-  kubectl create namespace sock-shop
-  ```
-  Install microservice application under "sock-shop" namespace
-  ```
-   kubectl -n sock-shop create -f microservices-demo/deploy/kubernetes/complete-demo.yaml
-  ```
-  List pods for newly created application
-  ``` 
-  kubectl get pods -n sock-shop 
-  ```
-  or watch them in real time
-  ```
-  kubectl get pods -n sock-shop -w
-  ```
-#### 4. Access Microservice Application
-  List services in the application
-  ```
-   kubectl get services -n sock-shop
-  ```
-  Get information about the NodePort service:
-  ```
-  kubectl describe services -n sock-shop front-end
-  ```
-  Access the application using the IP of one of the cluster nodes and the port from the "NodePort" service
-  ``` http://<IP_ADDRESS>:30080
-  ```
-  
-  If you can't access, please check your security group for worker nodes to ensure port 30080 accessible from the internet
 
-#### 5. Try out your MicroService Application (e.g. Create an account, login, browse products, add product to cart, view cart and checkout etc)
-
-
-## OPTIONAL
-### MANUAL SCALING MICROSERVICES
-#### 1. List deployments
-  ``` 
-  kubectl get deployments -n sock-shop
-  ```
-#### 2. List deployment and pods
-  ```bash
-  kubectl get deployments front-end -n sock-shop
-  kubectl get pods -n sock-shop
-  ```
-#### 3. Get additional information about deployments
- ```
- kubectl describe deployments front-end -n sock-shop
- ```
-#### 4. Scale directly from command line
-  ```
-  kubectl scale deployment/front-end --replicas=3 -n sock-shop
-  ```
-#### 5. List deployment and pods
-  ```bash 
-  kubectl get deployments front-end -n sock-shop
-  kubectl get pods -n sock-shop
-  ```
-
-## AUTO SCALING MICROSERVICES using HPA (Horizontal Pod AutoScaler)
-#### 1. List current deployments
-  ```
-  kubectl get deployments front-end -n sock-shop
-  ```
-#### 2. Create Horizontal Pod Autoscaler for a deployment
-  ```
-  kubectl autoscale deployment front-end -n sock-shop --min 2 --max 6 --cpu-percent 65
-  ```
-#### 3. List Horizontal Pod Autoscaler
-  ```
-  kubectl get hpa -n sock-shop
-  ```
-#### 4. Delete HPA
-  ```
-  kubectl delete hpa -n sock-shop <HPA>
-  ```
-  
-## ADDITIONAL NOTES;
-Explore eksctl, a much easier way to deploy EKS Cluster in single command on AWS!
-> https://eksctl.io
-
-Future enhancement list:
-- to include kubernates official dasboard
