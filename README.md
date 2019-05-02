@@ -168,9 +168,9 @@ This name must exactly match the name you used in Step 1: Create Your Amazon EKS
 
    - NodeInstanceType: Choose an instance type for your worker nodes.
 
-   - NodeImageId: Enter the current Amazon EKS worker node AMI ID for your Region (ami-07b922b9b94d9a6d2). The AMI IDs for the latest Amazon EKS-optimized AMI (with and without GPU support) are shown in the following table. 
+   - NodeImageId: Enter the current Amazon EKS worker node AMI ID for your Region (ami-07b922b9b94d9a6d2). 
    
-## 6. Launch and Configure Amazon EKS Worker Nodes 
+## 6. Create AWS authenticator configuration map
 
 Download, edit, and apply the AWS authenticator configuration map:
 
