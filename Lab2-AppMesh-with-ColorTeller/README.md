@@ -277,6 +277,8 @@ Up to this point, we’ve created all required components of the app mesh (vitua
 
 To deploy the app, download color.yaml and and deploy it.
 
+**Important** You will need to update color.yaml with the ECR respository uri of your colorgateway and colorteller docker images.
+
 ```
 curl -O https://github.com/tohwsw/aws-eks-workshop/blob/master/Lab2-AppMesh-with-ColorTeller/color.yaml
 
