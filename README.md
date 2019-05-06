@@ -1,6 +1,6 @@
 
 
-# Getting Started with ECS
+# Getting Started with EKS
 
 ## Overview
 
