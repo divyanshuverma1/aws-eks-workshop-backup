@@ -280,9 +280,9 @@ To deploy the app, download color.yaml and and deploy it.
 **Important** You will need to update color.yaml with the ECR respository uri of your colorgateway and colorteller docker images.
 
 ```
-curl -O https://github.com/tohwsw/aws-eks-workshop/blob/master/Lab2-AppMesh-with-ColorTeller/color.yaml
+curl -O https://github.com/tohwsw/aws-eks-workshop/blob/master/Lab2-AppMesh-with-ColorTeller/colorapp.yaml
 
-kubectl apply -f color.yaml
+kubectl apply -f colorapp.yaml
 ```
 
 In addition to deploying the application, we’ll also deploy Curler, which is a simple image that provide curl functionality. To deploy the curler pods, copy and paste the following:
@@ -352,7 +352,9 @@ aws appmesh update-route  --mesh-name APP_MESH_DEMO --cli-input-json '{
 
 If you look at the curler terminal, you should now see an equal distribution of traffic to the blue, red, and black virtual nodes. This shows that App Mesh is now controlling the distribution of traffic!
 
+## 10. Lab Cleanup
 
+To clean up the lab, please delete the CloudFromation stacks in the console.
 
 
 
