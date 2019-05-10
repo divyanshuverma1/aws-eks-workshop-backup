@@ -280,7 +280,7 @@ To deploy the app, download color.yaml and and deploy it.
 **Important** You will need to update color.yaml with the ECR respository uri of your colorgateway and colorteller docker images.
 
 ```
-curl -O https://github.com/tohwsw/aws-eks-workshop/blob/master/Lab2-AppMesh-with-ColorTeller/colorapp.yaml
+curl -O https://raw.githubusercontent.com/tohwsw/aws-eks-workshop/master/Lab2-AppMesh-with-ColorTeller/colorapp.yaml
 
 kubectl apply -f colorapp.yaml
 ```
